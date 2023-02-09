@@ -1,9 +1,23 @@
 import Head from 'next/head'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import interact from 'interactjs'
-import { jsPDF } from 'jspdf'
 
 const Home = () => {
+  const [inputTop, setInputTop] = useState(0)
+  const [inputLeft, setInputLeft] = useState(0)
+  const certificateRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    const certificate = certificateRef.current
+    const input = inputRef.current
+
+    if (certificate && input) {
+      setInputTop(certificate.offsetTop + 50)
+      setInputLeft(certificate.offsetLeft + 50)
+    }
+  }, [certificateRef, inputRef])
+
   useEffect(() => {
     // target elements with the "draggable" class
     interact('.draggable').draggable({
@@ -26,7 +40,8 @@ const Home = () => {
         // call this function on every dragend event
         end(event) {
           var textEl = event.target.querySelector('p')
-
+          setInputTop(inputRef.current.offsetTop)
+          setInputLeft(inputRef.current.offsetLeft)
           textEl &&
             (textEl.textContent =
               'moved a distance of ' +
@@ -42,7 +57,6 @@ const Home = () => {
 
     function dragMoveListener(event) {
       var target = event.target
-      // keep the dragged position in the data-x/data-y attributes
       var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
       var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
 
@@ -52,6 +66,9 @@ const Home = () => {
       // update the posiion attributes
       target.setAttribute('data-x', x)
       target.setAttribute('data-y', y)
+
+      setInputTop(event.clientY)
+      setInputLeft(event.clientX)
     }
 
     // this function is used later in the resizing and gesture demos
@@ -110,53 +127,34 @@ const Home = () => {
           }),
         ],
       })
-  }, [])
-
-  const componentRef = useRef(null)
-
-  const downloadPDF = () => {
-    const pdf = new jsPDF('p', 'pt', 'a4')
-    const source = componentRef.current
-    if (!source) {
-      return
-    }
-    const specialElementHandlers = {
-      '#bypassme': function (element, renderer) {
-        return true
-      },
-    }
-    pdf.setProperties({
-      title: 'Result PDF',
-      subject: 'Generated PDF with text and image',
-    })
-    pdf.html(source, {
-      pagesplit: true,
-      width: source.offsetWidth,
-      elementHandlers: specialElementHandlers,
-    })
-    pdf.save('result.pdf')
-  }
-
+  }, [inputRef])
+  useEffect(() => {
+    console.log(inputTop, inputLeft)
+  }, [inputTop, inputLeft])
   return (
     <div className='h-screen overflow-hidden'>
       <Head>
         <title>Dnd</title>
         <link rel='icon' href='/favicon.ico' />
       </Head>
-      <div class='resize-drag'>Resize from any edge or corner</div>
-      <div className='' ref={componentRef}>
-        <img
-          src='/test.jpg'
-          alt='test'
-          className='absolute inset-0 w-96 ml-auto -z-10'
-        />
-        <button
-          onClick={downloadPDF}
-          className='p-4 bg-slate-700 text-white rounded-md'
-        >
-          Download PDF
-        </button>
-      </div>
+      <input
+        className='resize-drag'
+        ref={inputRef}
+        type='text'
+        id='input-field'
+        style={{
+          position: 'absolute',
+          top: inputTop,
+          left: inputLeft,
+        }}
+      />
+      <img
+        src='/test.jpg'
+        alt='test'
+        className='absolute inset-0 w-96 ml-auto -z-10'
+        ref={certificateRef}
+        id='certificate'
+      />
     </div>
   )
 }

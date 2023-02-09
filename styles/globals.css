@@ -11,9 +11,7 @@
   color: white;
   font-size: 20px;
   font-family: sans-serif;
-
+  outline-color: transparent;
   touch-action: none;
-
-  /* This makes things *much* easier */
   box-sizing: border-box;
 }
