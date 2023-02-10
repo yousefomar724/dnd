@@ -3,20 +3,15 @@ import { useEffect, useRef, useState } from 'react'
 import interact from 'interactjs'
 
 const Home = () => {
-  const [inputTop, setInputTop] = useState(0)
-  const [inputLeft, setInputLeft] = useState(0)
-  const certificateRef = useRef(null)
-  const inputRef = useRef(null)
+  const [x, setX] = useState(0)
+  const [y, setY] = useState(0)
+  const imageRef = useRef(null)
 
-  useEffect(() => {
-    const certificate = certificateRef.current
-    const input = inputRef.current
-
-    if (certificate && input) {
-      setInputTop(certificate.offsetTop + 50)
-      setInputLeft(certificate.offsetLeft + 50)
-    }
-  }, [certificateRef, inputRef])
+  const handleDrag = (e) => {
+    const imageRect = imageRef.current.getBoundingClientRect()
+    setX(e.clientX - imageRect.left)
+    setY(e.clientY - imageRect.top)
+  }
 
   useEffect(() => {
     // target elements with the "draggable" class
@@ -40,8 +35,7 @@ const Home = () => {
         // call this function on every dragend event
         end(event) {
           var textEl = event.target.querySelector('p')
-          setInputTop(inputRef.current.offsetTop)
-          setInputLeft(inputRef.current.offsetLeft)
+
           textEl &&
             (textEl.textContent =
               'moved a distance of ' +
@@ -57,6 +51,7 @@ const Home = () => {
 
     function dragMoveListener(event) {
       var target = event.target
+      // keep the dragged position in the data-x/data-y attributes
       var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
       var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
 
@@ -66,9 +61,7 @@ const Home = () => {
       // update the posiion attributes
       target.setAttribute('data-x', x)
       target.setAttribute('data-y', y)
-
-      setInputTop(event.clientY)
-      setInputLeft(event.clientX)
+      console.log(x, y)
     }
 
     // this function is used later in the resizing and gesture demos
@@ -111,7 +104,7 @@ const Home = () => {
 
           // minimum size
           interact.modifiers.restrictSize({
-            min: { width: 100, height: 50 },
+            min: { width: 50, height: 20 },
           }),
         ],
 
@@ -127,10 +120,8 @@ const Home = () => {
           }),
         ],
       })
-  }, [inputRef])
-  useEffect(() => {
-    console.log(inputTop, inputLeft)
-  }, [inputTop, inputLeft])
+  }, [])
+
   return (
     <div className='h-screen overflow-hidden'>
       <Head>
@@ -139,20 +130,16 @@ const Home = () => {
       </Head>
       <input
         className='resize-drag'
-        ref={inputRef}
         type='text'
         id='input-field'
-        style={{
-          position: 'absolute',
-          top: inputTop,
-          left: inputLeft,
-        }}
+        value={`${x}, ${y}`}
+        onMouseMove={handleDrag}
       />
       <img
+        ref={imageRef}
         src='/test.jpg'
         alt='test'
-        className='absolute inset-0 w-96 ml-auto -z-10'
-        ref={certificateRef}
+        className='absolute inset-0 w-96 ml-auto'
         id='certificate'
       />
     </div>
